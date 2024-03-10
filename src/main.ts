@@ -1,5 +1,254 @@
-// const redirect_uri = "http://localhost:5173"; // change this your value
+const $ = (s: string) => document.querySelector(s);
 
+// GENERAL VARIABLES
+const REDIRECT_URI = "http://localhost:5173";
+let client_id = localStorage.getItem("client_id") || "";
+let client_secret = localStorage.getItem("client_secret") || "";
+
+// PAGES
+const $login = $("section#login") as HTMLDivElement;
+const $app = $("section#app") as HTMLDivElement;
+const $dialog = $("div#dialog") as HTMLDivElement;
+
+// LOGIN
+const $form = $("form#form-login") as HTMLFormElement;
+const $clientIdBtn = $("input#clientID") as HTMLInputElement;
+const $clientSecretBtn = $("input#clientSecret") as HTMLInputElement;
+const $requestAuthBtn = $("button#requestAuth") as HTMLButtonElement;
+
+// APP
+const $showDevices = $("button#showDevices") as HTMLButtonElement;
+
+// MUSIC
+const $img = $("img#songImage") as HTMLImageElement;
+const $songTitle = $("h1#songTitle") as HTMLParagraphElement;
+const $songArtist = $("h2#songArtist") as HTMLParagraphElement;
+const $prevSong = $("button#prevSong") as HTMLButtonElement;
+const $tooglePlay = $("button#tooglePlay") as HTMLButtonElement;
+const $nextSong = $("button#nextSong") as HTMLButtonElement;
+
+// DEVICES
+const $selectDevice = $("select#selectDevice") as HTMLSelectElement;
+
+// EVENTS
+window.addEventListener("load", handlePageLoad);
+$showDevices.addEventListener("click", handleShowDevices);
+$form.addEventListener("submit", handleFormSubmit);
+$prevSong.addEventListener("click", prevSong);
+$tooglePlay.addEventListener("click", tooglePlay);
+$nextSong.addEventListener("click", nextSong);
+
+// FUNCTIONS
+function handleShowDevices() {
+    $dialog.classList.toggle("hidden");
+    $dialog.classList.toggle("grid");
+}
+
+function handleFormSubmit(e: Event) {
+    e.preventDefault();
+    client_id = $clientIdBtn.value;
+    client_secret = $clientSecretBtn.value;
+
+    if (!(client_id && client_secret)) return;
+
+    $requestAuthBtn.disabled = true;
+    localStorage.setItem("client_id", client_id);
+    localStorage.setItem("client_secret", client_secret);
+    window.location.href = `https://accounts.spotify.com/authorize?client_id=${client_id}&response_type=code&redirect_uri=${REDIRECT_URI}&show_dialog=true&scope=user-read-private user-read-email user-modify-playback-state user-read-playback-position user-library-read streaming user-read-playback-state user-read-recently-played playlist-read-private`;
+}
+
+function handlePageLoad() {
+    const code = getCode();
+    if (code) {
+        fetchAccessToken(code);
+    } else {
+        onPageLoad();
+    }
+}
+
+function getCode() {
+    const queryString = window.location.search;
+    if (queryString.length > 0) {
+        const urlParams = new URLSearchParams(queryString);
+        return urlParams.get("code");
+    }
+    return null;
+}
+
+function fetchAccessToken(code: string) {
+    const body = `grant_type=authorization_code&code=${code}&redirect_uri=${REDIRECT_URI}&client_id=${client_id}&client_secret=${client_secret}`;
+    callAuthorizationApi(body);
+}
+
+function refreshAccessToken() {
+    const refresh_token = localStorage.getItem("refresh_token");
+    const body = `grant_type=refresh_token&refresh_token=${refresh_token}&client_id=${client_id}`;
+    callAuthorizationApi(body);
+}
+
+function callAuthorizationApi(body: string) {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "https://accounts.spotify.com/api/token", true);
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.setRequestHeader(
+        "Authorization",
+        `Basic ${btoa(`${client_id}:${client_secret}`)}`
+    );
+
+    console.log(`Basic ${btoa(`${client_id}:${client_secret}`)}`);
+    xhr.send(body);
+    xhr.onload = handleAuthorizationResponse;
+}
+
+// eslint-disable-next-line no-unused-vars
+function handleAuthorizationResponse(this: XMLHttpRequest) {
+    console.log(this.status);
+    if (this.status === 200) {
+        const data = JSON.parse(this.responseText);
+        if (data.access_token) {
+            localStorage.setItem("access_token", data.access_token);
+        }
+        if (data.refresh_token) {
+            localStorage.setItem("refresh_token", data.refresh_token);
+        }
+        onPageLoad();
+    } else {
+        window.location.href = REDIRECT_URI;
+    }
+}
+
+function onPageLoad() {
+    const access_token = localStorage.getItem("access_token");
+    if (access_token) {
+        $login.classList.add("hidden");
+        $app.classList.remove("hidden");
+        refreshDevices();
+        currentlyPlaying();
+    }
+}
+
+function refreshDevices() {
+    callApi(
+        "GET",
+        "https://api.spotify.com/v1/me/player/devices",
+        null,
+        handleDevicesResponse
+    );
+}
+
+// eslint-disable-next-line no-unused-vars
+function handleDevicesResponse(this: XMLHttpRequest) {
+    if (this.status === 200) {
+        const data = JSON.parse(this.responseText);
+        removeAllItems("devices");
+        data.devices.forEach((item: any) => addDevice(item));
+    } else if (this.status === 401) {
+        refreshAccessToken();
+    } else {
+        window.location.href = REDIRECT_URI;
+    }
+}
+
+function addDevice(item: any) {
+    const node = document.createElement("option");
+    node.value = item.id;
+    node.innerHTML = item.name;
+    $("select#devices")?.appendChild(node);
+}
+
+function callApi(method: string, url: string, body: any, callback: any) {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader(
+        "Authorization",
+        `Bearer ${localStorage.getItem("access_token")}`
+    );
+    xhr.send(body);
+    xhr.onload = callback;
+}
+
+function removeAllItems(elementId: string) {
+    const node = $(`select#${elementId}`);
+    while (node?.firstChild) {
+        node?.removeChild(node?.firstChild);
+    }
+}
+
+function currentlyPlaying() {
+    callApi(
+        "GET",
+        "https://api.spotify.com/v1/me/player/currently-playing",
+        null,
+        handleCurrentlyPlayingResponse
+    );
+}
+
+// eslint-disable-next-line no-unused-vars
+function handleCurrentlyPlayingResponse(this: XMLHttpRequest) {
+    if (this.status === 200) {
+        const data = JSON.parse(this.responseText);
+        if (data.item) {
+            $login.setAttribute("hidden", "");
+            $app.removeAttribute("hidden");
+            console.log(data.item.album);
+
+            $img.src = data.item.album.images[0].url;
+            $songTitle.innerHTML = data.item.album.name;
+            $songArtist.innerHTML = data.item.artists[0].name;
+        }
+    } else if (this.status === 401) {
+        refreshAccessToken();
+    } else {
+        window.location.href = REDIRECT_URI;
+    }
+}
+
+function tooglePlay() {
+    callApi(
+        "PUT",
+        "https://api.spotify.com/v1/me/player/play",
+        null,
+        handleApiResponse
+    );
+}
+
+// eslint-disable-next-line no-unused-vars
+function handleApiResponse(this: XMLHttpRequest) {
+    if (this.status === 200) {
+        console.log(this.responseText);
+        setTimeout(currentlyPlaying, 2000);
+    } else if (this.status === 204) {
+        setTimeout(currentlyPlaying, 2000);
+    } else if (this.status === 401) {
+        refreshAccessToken();
+    } else {
+        window.location.href = REDIRECT_URI;
+    }
+}
+
+function prevSong() {
+    callApi(
+        "POST",
+        "https://api.spotify.com/v1/me/player/previous",
+        null,
+        handleApiResponse
+    );
+}
+
+function nextSong() {
+    callApi(
+        "POST",
+        "https://api.spotify.com/v1/me/player/next",
+        null,
+        handleApiResponse
+    );
+}
+
+// Call the transfer function wherever you need to transfer playback to a specific device.
+// For example:
+
+// ------------------------------------------------
 // const client_id = "";
 // const client_secret = "";
 
@@ -120,7 +369,7 @@
 //     onPageLoad();
 //   } else {
 //     console.log(this.responseText);
-//     alert(this.responseText);
+//     window.location.href = REDIRECT_URI;
 //   }
 // }
 
@@ -138,7 +387,7 @@
 //     refreshAccessToken();
 //   } else {
 //     console.log(this.responseText);
-//     alert(this.responseText);
+//     window.location.href = REDIRECT_URI;
 //   }
 // }
 
@@ -173,7 +422,7 @@
 //     refreshAccessToken();
 //   } else {
 //     console.log(this.responseText);
-//     alert(this.responseText);
+//     window.location.href = REDIRECT_URI;
 //   }
 // }
 
@@ -256,7 +505,7 @@
 //     refreshAccessToken();
 //   } else {
 //     console.log(this.responseText);
-//     alert(this.responseText);
+//     window.location.href = REDIRECT_URI;
 //   }
 // }
 
@@ -282,7 +531,7 @@
 //     refreshAccessToken();
 //   } else {
 //     console.log(this.responseText);
-//     alert(this.responseText);
+//     window.location.href = REDIRECT_URI;
 //   }
 // }
 
@@ -328,7 +577,7 @@
 //     refreshAccessToken();
 //   } else {
 //     console.log(this.responseText);
-//     alert(this.responseText);
+//     window.location.href = REDIRECT_URI;
 //   }
 // }
 

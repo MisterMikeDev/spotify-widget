@@ -2,13 +2,13 @@
 <html lang="es">
     <head>
         <meta charset="UTF-8" />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" type="image/png+xml" href="/favicon.png" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Spotify Widget</title>
         <link rel="stylesheet" href="src/style.css" />
     </head>
     <body class="min-h-[100dvh] grid place-content-center bg-black text-white">
-        <main class="bg-tagSpotify p-20 rounded-3xl w-[30rem]">
+        <main class="bg-tagSpotify p-20 rounded-3xl w-[30rem] relative">
             <section id="login">
                 <h1
                     class="text-4xl text-greenSpotify font-extrabold text-center mb-10 -mt-5"
@@ -17,16 +17,19 @@
                 </h1>
                 <form id="form-login" class="flex flex-col gap-4">
                     <input
+                        id="clientID"
                         type="text"
                         placeholder="ClientID"
                         class="p-3 pl-5 w-full rounded-xl outline-none border-none text-black focus:ring-4 focus:ring-greenSpotify transition-all duration-300"
                     />
                     <input
+                        id="clientSecret"
                         type="password"
                         placeholder="ClientSecret"
                         class="p-3 pl-5 w-full rounded-xl outline-none border-none text-black focus:ring-4 focus:ring-greenSpotify transition-all duration-300"
                     />
                     <button
+                        id="requestAuth"
                         type="submit"
                         class="bg-greenSpotify p-4 rounded-3xl font-bold w-full mt-4 transition-all duration-300 hover:filter hover:brightness-75"
                     >
@@ -34,7 +37,129 @@
                     </button>
                 </form>
             </section>
-            <section id="app"></section>
+            <section id="app" hidden>
+                <img
+                    src="/placeholder.png"
+                    alt="Song placeholder image."
+                    id="songImage"
+                    class="w-52 h-5w-52 rounded-3xl mx-auto object-cover"
+                />
+                <article class="flex flex-col gap-4 mt-4">
+                    <h1
+                        id="songTitle"
+                        class="text-4xl font-extrabold text-center"
+                    >
+                        Song Name
+                    </h1>
+                    <h2
+                        id="songArtist"
+                        class="text-xl font-semibold text-center"
+                    >
+                        Artist Name
+                    </h2>
+                </article>
+                <footer class="flex flex-row justify-around mt-8">
+                    <button
+                        class="w-12 h-12 bg-tagSpotify grid place-content-center rounded-xl transition-all duration-300 hover:text-greenSpotify"
+                        id="prevSong"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            fill="none"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M21 5v14l-8 -7z" />
+                            <path d="M10 5v14l-8 -7z" />
+                        </svg>
+                    </button>
+                    <button
+                        class="w-12 h-12 bg-tagSpotify grid place-content-center rounded-xl transition-all duration-300 hover:text-greenSpotify"
+                        id="tooglePlay"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            fill="none"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path
+                                d="M6 4v16a1 1 0 0 0 1.524 .852l13 -8a1 1 0 0 0 0 -1.704l-13 -8a1 1 0 0 0 -1.524 .852z"
+                                stroke-width="0"
+                                fill="currentColor"
+                            />
+                        </svg>
+                    </button>
+                    <button
+                        class="w-12 h-12 bg-tagSpotify grid place-content-center rounded-xl transition-all duration-300 hover:text-greenSpotify"
+                        id="nextSong"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            fill="none"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M3 5v14l8 -7z" />
+                            <path d="M14 5v14l8 -7z" />
+                        </svg>
+                    </button>
+                </footer>
+                <button
+                    id="showDevices"
+                    class="absolute bottom-4 right-4 w-12 h-12 bg-tagSpotify grid place-content-center rounded-xl transition-all duration-300 hover:text-greenSpotify"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M3 19l18 0" />
+                        <path
+                            d="M5 6m0 1a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v8a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1z"
+                        />
+                    </svg>
+                </button>
+            </section>
+            <div
+                id="dialog"
+                class="absolute w-[20rem] h-[25rem] inset-0 m-auto bg-zinc-800 place-content-center rounded-3xl text-white text-center p-4 hidden"
+            >
+                <select
+                    id="selectDevice"
+                    class="mt-4 p-3 rounded-l-lg outline-none border-none text-black"
+                >
+                    <option value="MRMIKDEV-LAPTO" selected>
+                        MRMIKDEV-LAPTO
+                    </option>
+                    <option value="SM-A207M">SM-A207M</option>
+                </select>
+            </div>
         </main>
     </body>
     <script type="module" src="/src/main.ts"></script>
