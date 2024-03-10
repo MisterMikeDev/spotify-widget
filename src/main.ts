@@ -6,6 +6,7 @@ const REDIRECT_URI =
         ? "http://localhost:5173"
         : "https://spotify-widget-mrmikedev.vercel.app";
 console.log(import.meta.env.MODE, import.meta.env.DEV, import.meta.env.PROD);
+console.log(REDIRECT_URI);
 
 let client_id = localStorage.getItem("client_id") || "";
 let client_secret = localStorage.getItem("client_secret") || "";
