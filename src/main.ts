@@ -1,7 +1,9 @@
 const $ = (s: string) => document.querySelector(s);
 
 // GENERAL VARIABLES
-const REDIRECT_URI = "http://localhost:5173";
+const REDIRECT_URI = import.meta.env.DEV
+    ? "http://localhost:5173"
+    : "https://spotify-widget-mrmikedev.vercel.app";
 let client_id = localStorage.getItem("client_id") || "";
 let client_secret = localStorage.getItem("client_secret") || "";
 
@@ -28,7 +30,7 @@ const $tooglePlay = $("button#tooglePlay") as HTMLButtonElement;
 const $nextSong = $("button#nextSong") as HTMLButtonElement;
 
 // DEVICES
-const $selectDevice = $("select#selectDevice") as HTMLSelectElement;
+// const $selectDevice = $("select#selectDevice") as HTMLSelectElement;
 
 // EVENTS
 window.addEventListener("load", handlePageLoad);
