@@ -1,9 +1,12 @@
 const $ = (s: string) => document.querySelector(s);
 
 // GENERAL VARIABLES
-const REDIRECT_URI = import.meta.env.DEV
-    ? "http://localhost:5173"
-    : "https://spotify-widget-mrmikedev.vercel.app";
+const REDIRECT_URI =
+    import.meta.env.MODE === "development"
+        ? "http://localhost:5173"
+        : "https://spotify-widget-mrmikedev.vercel.app";
+console.log(import.meta.env.MODE, import.meta.env.DEV, import.meta.env.PROD);
+
 let client_id = localStorage.getItem("client_id") || "";
 let client_secret = localStorage.getItem("client_secret") || "";
 
