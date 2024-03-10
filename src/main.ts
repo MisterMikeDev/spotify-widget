@@ -6,11 +6,13 @@ const REDIRECT_URI =
         ? "http://localhost:5173"
         : "https://spotify-widget-mrmikedev.vercel.app";
 console.log(import.meta.env.MODE, import.meta.env.DEV, import.meta.env.PROD);
-console.log(REDIRECT_URI);
 
 let client_id = localStorage.getItem("client_id") || "";
 let client_secret = localStorage.getItem("client_secret") || "";
 
+console.log(client_id);
+console.log(client_secret);
+console.log(REDIRECT_URI);
 // PAGES
 const $login = $("section#login") as HTMLDivElement;
 const $app = $("section#app") as HTMLDivElement;
